@@ -1,0 +1,152 @@
+{
+  "title": "Hướng dẫn giảng viên: Thực hành điều phối giao đơn bằng Julia",
+  "date": "09/10/2026",
+  "audience": "Giảng viên; tách khỏi bộ phát sinh viên",
+  "defaultDuration": 180,
+  "teachingNotes": [
+    "Đây là một buổi thực hành của một ứng dụng. Chỉ đánh giá bốn hàm sinh viên tự viết: merge_sort, binary_search, bfs_routes và knapsack. Danh sách, FIFO, ngăn xếp, BST, DFS, đệ quy và vét cạn đã cung cấp để sinh viên thấy sự phối hợp; không biến việc đọc mã hỗ trợ thành bảy đề mới.",
+    "Giữ thứ tự nhiệm vụ sort → search → BFS → DP vì build_session cần merge_sort để chuẩn hóa danh sách kề. Sau BFS, tái dùng merge_sort cho thứ tự ưu tiên theo lợi ích/τ. Nếu giới thiệu BFS trước bằng hình, dùng đồ thị mẫu đã cho và không chạy build_session khi hàm sort còn thiếu.",
+    "Trước giờ học, kiểm tra Julia chạy được, khung sinh viên mở được và chế độ --data tạo MINI001 khi bốn TODO còn thiếu. Chuẩn bị máy giảng viên có mã lời giải riêng để trình diễn, nhưng không đặt lời giải trong bộ sinh viên.",
+    "Phân biệt kết quả minh họa đã biết với kiểm thử chương trình. Một hoạt hình đẹp hoặc một menu mở được chưa chứng minh bốn hàm đúng. Chỉ ghi đạt sau chạy đúng pha kiểm thử và đối chiếu đầu ra thực tế.",
+    "Mốc hỗ trợ: sau NV1 cần dãy mới [1,2,3]; sau NV2 phải tra Order/nothing; sau NV3 cần distance và routes hợp lệ cùng costs=Dict(1=>3,2=>5,3=>7); sau NV4 mới chạy ứng dụng trọn luồng.",
+    "Bảng ánh xạ bảy chương là phụ lục giải thích vai trò; một buổi không hiện thực tất cả 29 bài của học phần. Mục tiêu là bốn thuật toán trọng tâm và sự nối kết đầu ra–đầu vào.",
+    "MSSV chỉ dùng phần phát triển sau bộ mini trong phương án 180 phút. Không ép sinh viên vừa học chỉ số bảng DP vừa xử lý ngay bộ ngẫu nhiên 8–10 đơn trước khi kiểm tra được ba đơn bằng tay.",
+    "Phần trình bày bằng Julia là bắt buộc. Trong lớp tập trung bốn hàm và kiểm thử; sau buổi học sinh viên hoàn thiện báo cáo cùng notebook Julia/Pluto mẫu gọi cùng lõi. Máy chưa cài Pluto được chạy trực tiếp tệp notebook .jl bằng Julia. Không tăng số TODO hoặc kéo dài kịch bản trên lớp."
+  ],
+  "answers": [
+    {"id": "Q1", "answer": "Tìm kiếm nhị phân theo ID chỉ đúng khi danh mục có ID tăng, khóa duy nhất và không đổi trong lượt tra cứu. Dãy lợi ích/τ có thứ tự theo khóa khác; nhánh loại trái/phải dựa ID không còn hợp lệ.", "points": 2},
+    {"id": "Q2", "answer": "Điểm 4 cách nguồn 1 hai cạnh; lượt đi và về cần 2×2=4, phục vụ 1 nên τ=5. BFS tối ưu số cạnh trong đồ thị không trọng số hoặc cùng trọng số. Với thời gian cạnh khác nhau, số cạnh ít nhất không nhất thiết có tổng thời gian ít nhất; không dùng BFS thông thường để kết luận tối ưu tổng trọng số.", "points": 2},
+    {"id": "Q3", "answer": "Không lấy đơn 2: F(1,8)=6. Lấy đơn 2: lợi ích 8+F(1,3)=14. F(2,8)=14, ánh xạ table[3,9]. Nhánh lấy dùng hàng trước để phần còn lại chỉ xét các đơn 1..i−1; đọc cùng hàng có thể chọn lại đơn i và biến thành bài ba lô không giới hạn.", "points": 2},
+    {"id": "Q4", "answer": "Sau giao 1: FIFO [2], lịch sử [1], thời gian 3, lợi ích 6. Hoàn tác ngay: FIFO [1,2], lịch sử [], thời gian 0, lợi ích 0. ID chờ và đã giao không giao nhau, hợp đúng tập chọn, các tổng bằng tổng trên ID đã giao. Đưa đơn về cuối FIFO không khôi phục đúng thứ tự ban đầu.", "points": 2},
+    {"id": "Q5", "answer": "Sắp xếp trộn O(n log n); nhị phân O(log n); BFS cốt lõi O(V+E); DP bảng đầy đủ O(nB) thời gian và bộ nhớ. BST tra cứu O(h), có thể lệch với h=O(n). Khi BFS lưu routes cho mọi đỉnh, tính thêm tổng độ dài đường và bộ nhớ đường, có thể O(V²); không nhầm bộ nhớ này với BFS chỉ lưu parent.", "points": 2}
+  ],
+  "miniDataset": {
+    "budget": 8,
+    "vertices": 6,
+    "edges": [[1,2],[1,3],[2,4],[3,4],[3,5],[4,6],[5,6]],
+    "orders": [
+      {"id": 1, "destination": 2, "service": 1, "benefit": 6, "hops": 1, "cost": 3, "route": [1,2]},
+      {"id": 2, "destination": 4, "service": 1, "benefit": 8, "hops": 2, "cost": 5, "route": [1,2,4]},
+      {"id": 3, "destination": 6, "service": 1, "benefit": 10, "hops": 3, "cost": 7, "route": [1,2,4,6]}
+    ],
+    "distance": [0,1,1,2,2,3],
+    "priority": [1,2,3],
+    "selected": [1,2],
+    "cost": 8,
+    "benefit": 14,
+    "subsets": [
+      {"ids": [], "cost": 0, "benefit": 0, "feasible": true},
+      {"ids": [1], "cost": 3, "benefit": 6, "feasible": true},
+      {"ids": [2], "cost": 5, "benefit": 8, "feasible": true},
+      {"ids": [3], "cost": 7, "benefit": 10, "feasible": true},
+      {"ids": [1,2], "cost": 8, "benefit": 14, "feasible": true},
+      {"ids": [1,3], "cost": 10, "benefit": 16, "feasible": false},
+      {"ids": [2,3], "cost": 12, "benefit": 18, "feasible": false},
+      {"ids": [1,2,3], "cost": 15, "benefit": 24, "feasible": false}
+    ]
+  },
+  "dpExplanation": {
+    "definition": "F(i,b) là lợi ích tối đa từ i đơn đầu với ngân sách b; Julia lưu ở table[i+1,b+1].",
+    "budgets": [0,1,2,3,4,5,6,7,8],
+    "rows": [
+      {"i": 0, "label": "Chưa xét đơn", "values": [0,0,0,0,0,0,0,0,0]},
+      {"i": 1, "label": "Đơn 1: τ=3, lợi ích=6", "values": [0,0,0,6,6,6,6,6,6]},
+      {"i": 2, "label": "Thêm đơn 2: τ=5, lợi ích=8", "values": [0,0,0,6,6,8,8,8,14]},
+      {"i": 3, "label": "Thêm đơn 3: τ=7, lợi ích=10", "values": [0,0,0,6,6,8,8,10,14]}
+    ],
+    "keyCells": [
+      "F(2,8): không lấy đơn 2 được 6; lấy được 8+F(1,3)=14; chọn 14.",
+      "F(3,8): không lấy đơn 3 được 14; lấy được 10+F(2,1)=10; chọn 14.",
+      "F(3,7): không lấy đơn 3 được 8; lấy được 10+F(2,0)=10; chọn 10. Ô này giúp sinh viên thấy quyết định phụ thuộc ngân sách."
+    ],
+    "trace": [
+      {"i": 3, "b": 8, "decision": "F(3,8)=F(2,8)=14; không lấy ID 3; chuyển i=2,b=8."},
+      {"i": 2, "b": 8, "decision": "F(2,8)=14 lớn hơn F(1,8)=6; lấy ID 2; chuyển i=1,b=3."},
+      {"i": 1, "b": 3, "decision": "F(1,3)=6 lớn hơn F(0,3)=0; lấy ID 1; chuyển i=0,b=0 và dừng."}
+    ],
+    "gradingNote": "Khi giá trị bằng nhau, có thể không lấy hoặc chọn theo quy tắc khác nếu truy vết vẫn hợp lệ. Không chấm bằng so sánh cứng toàn bộ IDs với một lời giải khi có nhiều nghiệm tối ưu."
+  },
+  "integratedTrace": [
+    {"step": "Lập kế hoạch", "selected": [1,2], "pending": [1,2], "completed": [], "spent": 0, "earned": 0},
+    {"step": "Giao ID 1", "selected": [1,2], "pending": [2], "completed": [1], "spent": 3, "earned": 6},
+    {"step": "Hoàn tác", "selected": [1,2], "pending": [1,2], "completed": [], "spent": 0, "earned": 0},
+    {"step": "Giao lại ID 1", "selected": [1,2], "pending": [2], "completed": [1], "spent": 3, "earned": 6},
+    {"step": "Giao ID 2", "selected": [1,2], "pending": [], "completed": [1,2], "spent": 8, "earned": 14}
+  ],
+  "changedMapExample": {
+    "purpose": "Kiểm tra BFS thật sự cung cấp chi phí cho DP; chỉ dùng bản sao dữ liệu thử, giữ nguyên CSV chính thức.",
+    "removedEdges": [[2,4],[3,4]],
+    "remainingEdges": [[1,2],[1,3],[3,5],[4,6],[5,6]],
+    "budget": 8,
+    "costs": [3,9,7],
+    "routeForOrder2": [1,3,5,6,4],
+    "selected": [3],
+    "cost": 7,
+    "benefit": 10,
+    "explanation": "Đồ thị vẫn liên thông. Đơn 2 cần bốn cạnh tới điểm 4, nên τ=2×4+1=9; không còn vừa B=8. Đơn 1 và 3 giữ τ=3,7. Tối ưu đổi từ {1,2} lợi ích 14 sang {3} lợi ích 10. Nếu vẫn chọn {1,2}, cần tìm chi phí gán tay hoặc từ điển costs cũ trong luồng."
+  },
+  "greedyCounterexample": {
+    "budget": 13,
+    "orders": [
+      {"id": 1, "destination": 2, "service": 3, "benefit": 9, "cost": 5},
+      {"id": 2, "destination": 4, "service": 2, "benefit": 10, "cost": 6},
+      {"id": 3, "destination": 6, "service": 1, "benefit": 10, "cost": 7}
+    ],
+    "greedy": {"ids": [1,2], "cost": 11, "benefit": 19},
+    "optimal": {"ids": [2,3], "cost": 13, "benefit": 20},
+    "explanation": "Tỷ số 9/5 > 10/6 > 10/7 khiến tham lam chọn 1 rồi 2. Tập 2,3 cho lợi ích cao hơn. Dùng khi sinh viên hỏi vì sao cần DP dù tham lam đúng ở ví dụ mini."
+  },
+  "timeline90": [
+    {"minutes": 10, "title": "Đặc tả và dữ liệu", "activity": "Đọc cùng hai CSV mini, tính tay τ và xem sơ đồ một ứng dụng.", "evidence": "Dữ liệu và công thức 3,5,7."},
+    {"minutes": 15, "title": "Hiện thực merge_sort", "activity": "Làm NV1 và thử pha sort; giảng viên rút gọn truy vết đệ quy.", "evidence": "Dãy ID tăng, đủ phần tử, không đổi đầu vào."},
+    {"minutes": 15, "title": "Hiện thực binary_search", "activity": "Làm NV2 và thử pha search trên danh mục đã sắp.", "evidence": "Order/nothing và bảng biên tìm kiếm."},
+    {"minutes": 15, "title": "BFS có hướng dẫn", "activity": "Giảng viên cung cấp phiên bản BFS đúng sau phần dự đoán FIFO; sinh viên điền parent/distance và giải thích τ. Không đánh giá như sinh viên đã tự viết BFS.", "evidence": "Khoảng cách và đường đi đúng, điều kiện áp dụng BFS."},
+    {"minutes": 15, "title": "DP và truy vết có hướng dẫn", "activity": "Giảng viên dùng phiên bản DP đúng; sinh viên tính F(2,8), F(3,8) và truy vết. NV3/NV4 là bài hoàn thiện sau buổi.", "evidence": "Chọn 1,2 và giải thích được quyết định lấy/không lấy."},
+    {"minutes": 10, "title": "Ứng dụng trọn luồng", "activity": "Gọi cùng lõi đã hoàn chỉnh, giao–hoàn tác–xuất và kiểm tra trạng thái.", "evidence": "Một lượt chạy tích hợp, các tổng khớp."},
+    {"minutes": 10, "title": "Quiz và nộp tiến độ", "activity": "Trả lời câu hỏi ngắn, ghi phần tự làm/phần được cung cấp và commit tiến độ.", "evidence": "URL/commit, trạng thái hoàn thiện rõ ràng."}
+  ],
+  "timeline225": [
+    {"minutes": 10, "title": "Đặc tả và luồng ứng dụng", "activity": "Giới thiệu bài toán, đầu vào/đầu ra và sơ đồ xuyên suốt.", "evidence": "Một sơ đồ luồng."},
+    {"minutes": 15, "title": "Tạo và đọc CSV", "activity": "Tạo MINI001, đối chiếu dữ liệu và các điều kiện.", "evidence": "Hai CSV và mô tả cột."},
+    {"minutes": 25, "title": "NV1: Sắp xếp trộn", "activity": "Hoàn thiện hàm, truy vết, kiểm thử pha sort.", "evidence": "Dãy mới đúng, trường hợp biên đạt."},
+    {"minutes": 20, "title": "NV2: Tìm kiếm nhị phân", "activity": "Hoàn thiện hàm, bảng biên, kiểm thử pha search.", "evidence": "Order/nothing, đối chiếu BST."},
+    {"minutes": 30, "title": "NV3: BFS", "activity": "Hoàn thiện FIFO/parent/routes, kiểm thử và tính costs.", "evidence": "Khoảng cách, tuyến đường và 3,5,7."},
+    {"minutes": 35, "title": "NV4: Quy hoạch động", "activity": "Hoàn thiện bảng và truy vết, đối chiếu vét cạn.", "evidence": "Giá trị 14, tập hợp lệ và ô giải thích."},
+    {"minutes": 20, "title": "Tích hợp giao–hoàn tác–xuất", "activity": "Chạy trọn luồng và kiểm tra bất biến.", "evidence": "Các tổng và CSV khớp trạng thái."},
+    {"minutes": 25, "title": "Dữ liệu MSSV và truy vết cá nhân", "activity": "Sinh CSV theo MSSV, chạy cùng ứng dụng, theo dõi một ID thực tế; không sửa bộ dữ liệu.", "evidence": "Một chuỗi CSV→BFS→DP→trạng thái trên dữ liệu cá nhân."},
+    {"minutes": 20, "title": "Thử bản đồ thay đổi và phản ví dụ tham lam", "activity": "Dùng bản sao thử bỏ hai cạnh để thấy DP đổi theo BFS; đối chiếu phản ví dụ 19<20 nếu đủ thời gian.", "evidence": "Costs 3,9,7, chọn ID3; lý giải phạm vi tham lam."},
+    {"minutes": 10, "title": "Quiz", "activity": "Trả lời độc lập năm câu cuối buổi.", "evidence": "Phiếu trả lời có lý giải."},
+    {"minutes": 15, "title": "Ghi kết quả và GitHub", "activity": "Chạy kiểm thử all, ghi kết quả, commit và lập dàn ý báo cáo; hoàn thiện báo cáo cùng notebook Julia mẫu sau buổi học.", "evidence": "Lệnh chạy, kết quả thật, URL/commit và dàn ý báo cáo; notebook bắt buộc hoàn thiện sau buổi."}
+  ],
+  "gradingGuidance": [
+    "Rubric sinh viên tổng 100; đây là thang đề xuất cho buổi thực hành, giảng viên quyết định cách quy đổi vào điểm học phần. Năm câu quiz dùng phát vấn hoặc phần trình bày, không cộng một thang 10 riêng làm tổng thành 110.",
+    "Chấm tính đúng của từng hàm độc lập bằng các pha kiểm thử, sau đó chấm tích hợp. Lỗi ở một hàm đầu không tự động xóa điểm ý tưởng hoặc hàm sau nếu sinh viên có kiểm thử riêng đáng tin cậy.",
+    "NV1: kiểm tra đủ phần tử, không đổi đầu vào và ổn định. NV2: đúng Order/nothing và tiền điều kiện. NV3: đúng khoảng cách, routes hợp lệ, xử lý unreachable và costs nối DP. NV4: bảng đúng, tập hợp lệ, không lặp và truy vết khớp value.",
+    "Không chấm thiếu chỉ vì một đường BFS khác đường mẫu nhưng có cùng độ dài. Với DP nhiều nghiệm, so sánh tính khả thi và giá trị; thứ tự hàng đợi mới cần đúng quy tắc ưu tiên.",
+    "Yêu cầu sinh viên chỉ vào mã và giải thích một thay đổi trạng thái. Một bản code không giải thích được chưa đủ bằng chứng cho điểm trình bày ý tưởng.",
+    "Báo cáo chỉ cần 3–5 trang khuyến nghị; ưu tiên bảng thật, sơ đồ và lý giải, không ưu tiên độ dài. Chỉ ghi đạt/chưa đạt dựa lượt chạy thực tế. Báo cáo và notebook Julia mẫu hoàn thiện sau lớp; notebook là phần trình bày bắt buộc, có thể mở bằng Pluto hoặc chạy trực tiếp .jl nếu máy chưa cài Pluto.",
+    "Với phương án 90 phút, công bố rõ phạm vi trên lớp chỉ tự hiện thực NV1/NV2; NV3/NV4 hoàn thiện sau buổi. Không dùng kết quả giảng viên cung cấp để ghi sinh viên đã hiện thực đủ bốn hàm trong 90 phút."
+  ],
+  "oralQuestions": [
+    {"question": "Nếu tra cứu ID99 không tồn tại, kế hoạch hoặc FIFO có thay đổi không?", "lookFor": "Không; tra cứu là thao tác chỉ đọc và trả nothing."},
+    {"question": "Vì sao DP phải tra costs[o.id] thay vì lấy vị trí i làm khóa?", "lookFor": "costs là Dict theo ID; ID không nhất thiết bằng vị trí sau sắp xếp, chi phí phải ghép với đúng bản ghi."},
+    {"question": "Có thể chạy BFS một lần thay vì n lần không?", "lookFor": "Có, mọi đơn cùng nguồn1; lấy distance ở từng điểm giao."},
+    {"question": "Bỏ hai cạnh (2,4),(3,4) rồi chương trình vẫn chọn1,2: nên kiểm tra gì trước?", "lookFor": "Chi phí cũ/gán tay và việc kết quả BFS thực sự truyền vào DP; chi phí đúng của đơn2 nay là9."},
+    {"question": "Hoàn tác lần mới nhất vì sao dùng ngăn xếp?", "lookFor": "LIFO giữ đúng đảo ngược thao tác gần nhất; đưa ID về đầu FIFO để khôi phục thứ tự trước giao."},
+    {"question": "Bảng DP dùng O(nB); có phải đa thức theo số bit biểu diễn B không?", "lookFor": "Không; theo giá trị B, thuộc phân tích giả đa thức; không buộc sinh viên dùng thuật ngữ nếu chưa học nhưng cần hiểu giới hạn khi B rất lớn."}
+  ],
+  "teacherCommands": [
+    "julia TH_2026_10_09_Kiem_thu.jl --teacher --phase=all",
+    "julia TH_2026_10_09_Loi_giai.jl --data",
+    "julia TH_2026_10_09_Loi_giai.jl --mini",
+    "julia TH_2026_10_09_Loi_giai.jl N24DCDT040 --data",
+    "julia TH_2026_10_09_Loi_giai.jl N24DCDT040 --demo"
+  ],
+  "releaseChecklist": [
+    "Bộ sinh viên chứa đề, khung TODO, kiểm thử và dữ liệu; không chứa teacher_notes hoặc mã lời giải.",
+    "Bốn chữ ký hàm, hợp đồng kết quả trả về, cờ --phase và tên file trong tài liệu phải khớp mã thực tế.",
+    "Chạy lời giải trên dữ liệu mini và cá nhân; chạy các trường hợp biên có ý nghĩa; kiểm thử khung còn TODO phải báo chưa hoàn thiện rõ ràng.",
+    "Kiểm tra tổng timeline180,90,225; rubric100; đúng ngày09/10/2026; quiz sinh viên không có đáp án.",
+    "Kiểm tra tiếng Việt, font trình chiếu, bảng DP, ảnh/hình SVG và điều khiển hoạt hình; bản in vẫn đọc được khi không chạy JavaScript."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "setup": "# Trong Julia REPL; chạy một lần để nạp khung.\ninclude(\"TH_2026_10_09_Sinh_vien.jl\")\nusing .GiaoDon\nfolder = mini_data()\ndata = read_data(folder)\np = mini_profile()",
+  "read_csv": "# Tiền điều kiện: đã chạy setup. Hai CSV này chỉ chứa số nguyên.\norders = data.orders\nedges = data.edges\nprintln([(o.id,o.destination,o.service,o.benefit) for o in orders])\nprintln(edges)",
+  "sort_call": "# Tiền điều kiện: đã chạy setup và hoàn thiện TODO 1.\na = merge_sort([3,1,2], (<))\n@assert a == [1,2,3]\nby_id = merge_sort(data.orders[[3,1,2]],(x,y)->x.id < y.id)",
+  "search_call": "# Tiền điều kiện: đã chạy sort_call và hoàn thiện TODO 2.\nfound = binary_search(by_id,2)\n@assert found !== nothing && found.id == 2\n@assert binary_search(by_id,99) === nothing",
+  "bfs_call": "# Tiền điều kiện: đã chạy setup và hoàn thiện TODO 1, TODO 3.\ngraph = adjacency(data.edges,0)\nroutes = bfs_routes(graph,1)\n@assert routes.distance == [0,1,1,2,2,3]\ncosts = Dict(o.id=>2*routes.distance[o.destination]+o.service for o in data.orders)\n@assert [costs[i] for i in 1:3] == [3,5,7]",
+  "dp_call": "# Tiền điều kiện: đã chạy bfs_call và hoàn thiện TODO 4.\nresult = knapsack(data.orders,costs,p.budget)\n@assert Set(result.ids) == Set([1,2])\n@assert result.value == 14 && result.cost == 8",
+  "application_call": "# Tiền điều kiện: đã hoàn thiện cả bốn TODO.\ns = run_mini()\n@assert s.spent == 8 && s.earned == 14\n@assert isempty(queue_values(s.pending))\n@assert s.completed == [1,2]\n@assert check_invariants(s)",
+  "functions": {
+    "merge_sort": "function merge_sort(a::AbstractVector, before::Function)\n    length(a) <= 1 && return collect(a)\n    mid = div(length(a),2)\n    left = merge_sort(a[1:mid],before)\n    right = merge_sort(a[mid+1:end],before)\n    out = eltype(a)[]\n    i = j = 1\n    while i <= length(left) && j <= length(right)\n        if before(right[j],left[i])\n            push!(out,right[j]); j += 1\n        else\n            push!(out,left[i]); i += 1\n        end\n    end\n    while i <= length(left); push!(out,left[i]); i += 1; end\n    while j <= length(right); push!(out,right[j]); j += 1; end\n    out\nend",
+    "binary_search": "function binary_search(a::Vector{Order},id::Int)\n    lo,hi = 1,length(a)\n    while lo <= hi\n        mid = lo + div(hi-lo,2)\n        a[mid].id == id && return a[mid]\n        if a[mid].id < id; lo = mid+1; else; hi = mid-1; end\n    end\n    nothing\nend",
+    "bfs_routes": "function bfs_routes(graph,source=1)\n    n = length(graph)\n    distance = fill(-1,n); parent = zeros(Int,n)\n    q = CircularQueue(n)\n    distance[source] = 0; enqueue!(q,source)\n    while q.count > 0\n        u = dequeue!(q)\n        for v in graph[u]\n            if distance[v] == -1\n                distance[v] = distance[u]+1\n                parent[v] = u\n                enqueue!(q,v) || error(\"Hàng đợi BFS quá tải.\")\n            end\n        end\n    end\n    routes = [Int[] for _ in 1:n]\n    for v in 1:n\n        distance[v] == -1 && continue\n        route = Int[]; cursor = v\n        while cursor != 0\n            push!(route,cursor); cursor = parent[cursor]\n        end\n        routes[v] = reverse(route)\n    end\n    (distance=distance,parent=parent,routes=routes)\nend",
+    "knapsack": "function knapsack(orders,costs,budget)\n    budget >= 0 || throw(ArgumentError(\"Ngân sách không được âm.\"))\n    a = merge_sort(orders,(x,y)->x.id < y.id)\n    n = length(a); table = zeros(Int,n+1,budget+1)\n    for i in 1:n, b in 0:budget\n        o = a[i]; cost = costs[o.id]\n        cost > 0 || throw(ArgumentError(\"Chi phí đơn phải dương.\"))\n        skip = table[i,b+1]\n        take = cost <= b ? table[i,b-cost+1] + o.benefit : -1\n        table[i+1,b+1] = max(skip,take)\n    end\n    ids = Int[]; b = budget\n    for i in n:-1:1\n        if table[i+1,b+1] > table[i,b+1]\n            push!(ids,a[i].id); b -= costs[a[i].id]\n        end\n    end\n    ids = reverse(ids)\n    (ids=ids,value=table[n+1,budget+1],cost=budget-b,table=table)\nend"
+  },
+  "signatures": {
+    "merge_sort": "function merge_sort(a::AbstractVector, before::Function)",
+    "binary_search": "function binary_search(a::Vector{Order},id::Int)",
+    "bfs_routes": "function bfs_routes(graph,source=1)",
+    "knapsack": "function knapsack(orders,costs,budget)"
+  }
+}
